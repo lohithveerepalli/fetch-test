@@ -32,13 +32,23 @@ const Grid = MuiGrid as typeof MuiGrid & { item?: boolean };
 export function SearchPage() {
   const navigate = useNavigate();
   const { favorites, toggleFavorite, favoritesArray } = useFavorites();
-  const [filters, setFilters] = useState<Required<Pick<SearchFilters, 'breeds' | 'sort' | 'size'>> & SearchFilters>({
+  const [filters, setFilters] = useState<SearchFilters>({
     breeds: [],
     sort: { field: 'breed', order: 'asc' },
     size: ITEMS_PER_PAGE,
   });
 
-  const { dogs, pagination, isLoading, error, handleNextPage, handlePrevPage, handleResetPage } = useSearch(filters);
+  const { 
+    dogs, 
+    pagination, 
+    isLoading, 
+    error, 
+    handleNextPage, 
+    handlePrevPage, 
+    handleResetPage,
+    refetch,
+    searchState
+  } = useSearch(filters);
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -71,6 +81,16 @@ export function SearchPage() {
     }
   };
 
+  const getPageRange = () => {
+    if (!dogs.length) return 'No dogs to show';
+    
+    const fromParam = searchState?.currentPage ? new URLSearchParams(searchState.currentPage).get('from') : '0';
+    const startIndex = fromParam ? parseInt(fromParam) + 1 : 1;
+    const endIndex = startIndex + dogs.length - 1;
+    
+    return `Showing ${startIndex}-${endIndex} of ${pagination.total} dogs`;
+  };
+
   return (
     <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 4 }}>
@@ -94,7 +114,7 @@ export function SearchPage() {
           <Button
             startIcon={<Clear />}
             onClick={handleClearFilters}
-            disabled={filters.breeds.length === 0 && !filters.ageMin && !filters.ageMax}
+            disabled={filters.breeds?.length === 0 && !filters.ageMin && !filters.ageMax}
           >
             Clear Filters
           </Button>
@@ -103,7 +123,7 @@ export function SearchPage() {
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <BreedSelect
-              value={filters.breeds}
+              selectedBreeds={filters.breeds || []}
               onChange={breeds => setFilters(prev => ({ ...prev, breeds }))}
             />
           </Grid>
@@ -131,7 +151,7 @@ export function SearchPage() {
             <FormControl fullWidth>
               <InputLabel>Sort By</InputLabel>
               <Select
-                value={`${filters.sort.field}:${filters.sort.order}`}
+                value={`${filters.sort?.field || 'breed'}:${filters.sort?.order || 'asc'}`}
                 label="Sort By"
                 onChange={e => {
                   const [field, order] = e.target.value.split(':') as ['breed' | 'age' | 'name', 'asc' | 'desc'];
@@ -152,7 +172,15 @@ export function SearchPage() {
 
       {error ? (
         <Alert severity="error" sx={{ mb: 3 }}>
-          Failed to load dogs. Please try again later.
+          {error instanceof Error ? error.message : 'Failed to load dogs. Please try again later.'}
+          <Button
+            variant="text"
+            color="inherit"
+            onClick={() => refetch()}
+            sx={{ ml: 2 }}
+          >
+            Retry
+          </Button>
         </Alert>
       ) : (
         <>
@@ -163,18 +191,27 @@ export function SearchPage() {
                     <DogCardSkeleton />
                   </Grid>
                 ))
-              : dogs.map(dog => (
-                  <Grid item xs={12} sm={6} md={4} key={dog.id}>
-                    <DogCard
-                      dog={dog}
-                      isFavorite={favorites.has(dog.id)}
-                      onToggleFavorite={toggleFavorite}
-                    />
+              : dogs.length === 0 ? (
+                  <Grid item xs={12}>
+                    <Alert severity="info" sx={{ mb: 3 }}>
+                      No dogs found matching your criteria. Try adjusting your filters.
+                    </Alert>
                   </Grid>
-                ))}
+                ) : (
+                  dogs.map(dog => (
+                    <Grid item xs={12} sm={6} md={4} key={dog.id}>
+                      <DogCard
+                        dog={dog}
+                        isFavorite={favorites.has(dog.id)}
+                        onToggleFavorite={toggleFavorite}
+                        onClick={() => {}}
+                      />
+                    </Grid>
+                  ))
+                )}
           </Grid>
 
-          {pagination && (
+          {!isLoading && dogs.length > 0 && pagination && (
             <Stack
               direction="row"
               spacing={2}
@@ -185,15 +222,17 @@ export function SearchPage() {
               <Button
                 onClick={handlePrevPage}
                 disabled={!pagination.prev || isLoading}
+                variant="outlined"
               >
                 Previous
               </Button>
               <Typography color="text.secondary">
-                Showing {dogs.length} of {pagination.total} dogs
+                {getPageRange()}
               </Typography>
               <Button
                 onClick={handleNextPage}
                 disabled={!pagination.next || isLoading}
+                variant="outlined"
               >
                 Next
               </Button>
