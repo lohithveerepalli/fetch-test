@@ -1,72 +1,124 @@
+import { useState } from 'react';
 import {
   Card,
   CardMedia,
   CardContent,
   Typography,
-  CardActions,
   IconButton,
-  Skeleton,
   Box,
+  Skeleton,
+  CardActionArea,
+  useTheme,
 } from '@mui/material';
-import { Favorite, FavoriteBorder } from '@mui/icons-material';
-import type { Dog } from '../api';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import type { Dog } from '../api/types';
 
 interface DogCardProps {
   dog: Dog;
   isFavorite: boolean;
   onToggleFavorite: (dogId: string) => void;
+  onClick: (dog: Dog) => void;
 }
 
-export function DogCard({ dog, isFavorite, onToggleFavorite }: DogCardProps) {
-  return (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <CardMedia
-        component="img"
-        height="200"
-        image={dog.img}
-        alt={`Photo of ${dog.name}`}
-        sx={{ objectFit: 'cover' }}
-      />
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Typography gutterBottom variant="h6" component="h2">
-          {dog.name}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Breed: {dog.breed}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Age: {dog.age} {dog.age === 1 ? 'year' : 'years'}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Location: {dog.zip_code}
-        </Typography>
-      </CardContent>
-      <CardActions disableSpacing>
-        <IconButton
-          aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-          onClick={() => onToggleFavorite(dog.id)}
-          color="secondary"
-        >
-          {isFavorite ? <Favorite /> : <FavoriteBorder />}
-        </IconButton>
-      </CardActions>
-    </Card>
-  );
-}
+export const DogCard = ({
+  dog,
+  isFavorite,
+  onToggleFavorite,
+  onClick,
+}: DogCardProps) => {
+  const [imageError, setImageError] = useState(false);
+  const theme = useTheme();
 
-export function DogCardSkeleton() {
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleFavorite(dog.id);
+  };
+
   return (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Skeleton variant="rectangular" height={200} />
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Skeleton variant="text" width="60%" height={32} sx={{ mb: 1 }} />
-        <Skeleton variant="text" width="80%" height={24} />
-        <Skeleton variant="text" width="40%" height={24} />
-        <Skeleton variant="text" width="50%" height={24} />
-      </CardContent>
-      <CardActions disableSpacing>
-        <Skeleton variant="circular" width={40} height={40} />
-      </CardActions>
+    <Card
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        transition: 'transform 0.2s ease-in-out',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: theme.shadows[4],
+        },
+      }}
+    >
+      <CardActionArea
+        onClick={() => onClick(dog)}
+        sx={{ flexGrow: 1 }}
+        aria-label={`View details for ${dog.name}, a ${dog.breed}`}
+      >
+        {!imageError ? (
+          <CardMedia
+            component="img"
+            height="200"
+            image={dog.img}
+            alt={`Photo of ${dog.name}, a ${dog.breed}`}
+            onError={() => setImageError(true)}
+            sx={{ objectFit: 'cover' }}
+          />
+        ) : (
+          <Box
+            sx={{
+              height: 200,
+              bgcolor: 'grey.200',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              Image not available
+            </Typography>
+          </Box>
+        )}
+
+        <CardContent>
+          <Typography gutterBottom variant="h6" component="h2">
+            {dog.name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            {dog.breed}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {dog.age} {dog.age === 1 ? 'year' : 'years'} old • {dog.zip_code}
+          </Typography>
+        </CardContent>
+      </CardActionArea>
+
+      <IconButton
+        aria-label={isFavorite ? `Remove ${dog.name} from favorites` : `Add ${dog.name} to favorites`}
+        onClick={handleFavoriteClick}
+        sx={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          bgcolor: 'background.paper',
+          '&:hover': {
+            bgcolor: 'background.paper',
+          },
+        }}
+        color="primary"
+      >
+        {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+      </IconButton>
     </Card>
   );
-} 
+};
+
+export const DogCardSkeleton = () => (
+  <Card sx={{ height: '100%' }}>
+    <Skeleton variant="rectangular" height={200} />
+    <CardContent>
+      <Skeleton variant="text" width="60%" height={32} />
+      <Skeleton variant="text" width="40%" />
+      <Skeleton variant="text" width="30%" />
+    </CardContent>
+  </Card>
+); 

@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 
-export const API_BASE_URL = 'https://frontend-take-home-service.fetch.com';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -14,10 +14,7 @@ export const apiClient = axios.create({
 apiClient.interceptors.response.use(
   response => response,
   async (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access - redirect to login
-      window.location.href = '/login';
-    }
+    // Let the calling code handle the error
     return Promise.reject(error);
   }
 ); 

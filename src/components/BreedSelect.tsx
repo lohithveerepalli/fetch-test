@@ -8,13 +8,15 @@ import {
 } from '@mui/material';
 import { useBreeds } from '../hooks/useBreeds';
 
-interface BreedSelectProps {
-  value: string[];
+export interface BreedSelectProps {
+  selectedBreeds: string[];
   onChange: (breeds: string[]) => void;
-  disabled?: boolean;
 }
 
-export function BreedSelect({ value, onChange, disabled = false }: BreedSelectProps) {
+export const BreedSelect = ({
+  selectedBreeds,
+  onChange,
+}: BreedSelectProps) => {
   const { data: breeds, isLoading, error } = useBreeds();
 
   if (error) {
@@ -29,15 +31,16 @@ export function BreedSelect({ value, onChange, disabled = false }: BreedSelectPr
     <Autocomplete
       multiple
       options={breeds || []}
-      value={value}
+      value={selectedBreeds}
       onChange={(_, newValue) => onChange(newValue)}
-      disabled={disabled || isLoading}
+      disabled={isLoading}
       loading={isLoading}
       renderInput={(params) => (
         <TextField
           {...params}
-          label="Filter by Breeds"
-          placeholder={value.length === 0 ? 'Select breeds' : ''}
+          label="Select breeds"
+          placeholder={selectedBreeds.length === 0 ? "Search breeds..." : ""}
+          aria-label="breed selection"
           InputProps={{
             ...params.InputProps,
             endAdornment: (
@@ -67,6 +70,7 @@ export function BreedSelect({ value, onChange, disabled = false }: BreedSelectPr
       }}
       filterSelectedOptions
       limitTags={3}
+      ChipProps={{ color: 'primary' }}
     />
   );
-} 
+}; 

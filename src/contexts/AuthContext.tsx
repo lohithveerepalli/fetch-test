@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { auth } from '../api';
+import type { AxiosError } from 'axios';
 
 interface User {
   name: string;
@@ -23,6 +24,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return savedUser ? JSON.parse(savedUser) : null;
   });
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check authentication status on mount and handle expired sessions
+  useEffect(() => {
+    if (user && location.pathname !== '/login') {
+      // Verify the session is still valid
+      auth.login({ name: user.name, email: user.email }).catch((error: AxiosError) => {
+        if (error.response?.status === 401) {
+          setUser(null);
+          localStorage.removeItem('user');
+          navigate('/login', { replace: true });
+        }
+      });
+    }
+  }, []);
 
   const login = useCallback(async (name: string, email: string) => {
     try {
@@ -30,22 +46,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const newUser = { name, email };
       setUser(newUser);
       localStorage.setItem('user', JSON.stringify(newUser));
-      navigate('/search');
+      
+      // Get the redirect path from location state or default to /search
+      const from = (location.state as { from?: Location })?.from?.pathname || '/search';
+      navigate(from, { replace: true });
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
     }
-  }, [navigate]);
+  }, [navigate, location]);
 
   const logout = useCallback(async () => {
     try {
       await auth.logout();
-      setUser(null);
-      localStorage.removeItem('user');
-      navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
-      throw error;
+    } finally {
+      // Always clear local state, even if the API call fails
+      setUser(null);
+      localStorage.removeItem('user');
+      navigate('/login', { replace: true });
     }
   }, [navigate]);
 

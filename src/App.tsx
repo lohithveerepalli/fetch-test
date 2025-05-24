@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { CssBaseline } from '@mui/material';
 import { AuthProvider } from './contexts/AuthContext';
 import { FavoritesProvider } from './contexts/FavoritesContext';
@@ -8,55 +8,50 @@ import { Layout } from './components/Layout';
 import { LoginPage } from './pages/LoginPage';
 import { SearchPage } from './pages/SearchPage';
 import { MatchPage } from './pages/MatchPage';
+import { useAuth } from './contexts/AuthContext';
+
+// Root redirect component that checks auth status
+function RootRedirect() {
+  const { isAuthenticated } = useAuth();
+  return <Navigate to={isAuthenticated ? "/search" : "/login"} replace />;
+}
 
 function App() {
   return (
-    <Router>
-      <ThemeProvider>
-        <CssBaseline />
-        <AuthProvider>
-          <FavoritesProvider>
-            <Layout>
-              <Routes>
-                {/* Public routes */}
-                <Route
-                  path="/login"
-                  element={
-                    <LoginGuard>
-                      <LoginPage />
-                    </LoginGuard>
-                  }
-                />
+    <ThemeProvider>
+      <CssBaseline />
+      <AuthProvider>
+        <FavoritesProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route
+              path="/login"
+              element={
+                <LoginGuard>
+                  <LoginPage />
+                </LoginGuard>
+              }
+            />
 
-                {/* Protected routes */}
-                <Route
-                  path="/search"
-                  element={
-                    <AuthGuard>
-                      <SearchPage />
-                    </AuthGuard>
-                  }
-                />
-                <Route
-                  path="/match"
-                  element={
-                    <AuthGuard>
-                      <MatchPage />
-                    </AuthGuard>
-                  }
-                />
+            {/* Protected routes - wrapped in Layout */}
+            <Route
+              element={
+                <AuthGuard>
+                  <Layout />
+                </AuthGuard>
+              }
+            >
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/match" element={<MatchPage />} />
+            </Route>
 
-                {/* Redirect root to search or login based on auth status */}
-                <Route path="/" element={<Navigate to="/search" replace />} />
-                
-                {/* Catch all redirect */}
-                <Route path="*" element={<Navigate to="/search" replace />} />
-              </Routes>
-            </Layout>
-          </FavoritesProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </Router>
+            {/* Root and catch-all routes */}
+            <Route path="/" element={<RootRedirect />} />
+            <Route path="*" element={<RootRedirect />} />
+          </Routes>
+        </FavoritesProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

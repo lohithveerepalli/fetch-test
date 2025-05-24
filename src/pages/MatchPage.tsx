@@ -1,137 +1,145 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import {
-  Box,
+  Container,
   Typography,
-  Paper,
   Button,
-  Stack,
+  Box,
+  Paper,
+  useTheme,
   CircularProgress,
-  Alert,
 } from '@mui/material';
-import { Search, Refresh } from '@mui/icons-material';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { dogs } from '../api';
+import { useNavigate } from 'react-router-dom';
+import Confetti from 'react-confetti';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { DogCard } from '../components/DogCard';
+import { dogs as dogsApi } from '../api';
+import type { Dog } from '../api/types';
 
-export function MatchPage() {
+export const MatchPage = () => {
+  const [matchedDog, setMatchedDog] = useState<Dog | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const { favorites, toggleFavorite } = useFavorites();
   const navigate = useNavigate();
-  const { favoritesArray, clearFavorites } = useFavorites();
-  const [matchId, setMatchId] = useState<string>();
+  const theme = useTheme();
 
-  const matchMutation = useMutation({
-    mutationFn: () => dogs.match(favoritesArray),
-    onSuccess: data => setMatchId(data.match),
-  });
+  useEffect(() => {
+    const getMatch = async () => {
+      if (favorites.size === 0) {
+        setError('Please add some dogs to your favorites first!');
+        setIsLoading(false);
+        return;
+      }
 
-  const { data: matchedDog, isLoading: isLoadingDog } = useQuery({
-    queryKey: ['dog', matchId],
-    queryFn: () => dogs.getMany([matchId!]).then(dogs => dogs[0]),
-    enabled: !!matchId,
-  });
+      try {
+        const matchResponse = await dogsApi.match(Array.from(favorites));
+        const dogResponse = await dogsApi.getMany([matchResponse.match]);
+        setMatchedDog(dogResponse[0]);
+        setShowConfetti(true);
+      } catch (err) {
+        setError('Failed to find a match. Please try again.');
+        console.error('Match error:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleTryAgain = () => {
-    setMatchId(undefined);
-    matchMutation.mutate();
-  };
+    getMatch();
+  }, [favorites]);
 
-  const handleStartOver = () => {
-    clearFavorites();
-    navigate('/search');
-  };
-
-  // If no favorites, redirect to search
-  if (favoritesArray.length === 0) {
+  if (isLoading) {
     return (
-      <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
+      <Container maxWidth="sm" sx={{ mt: 4, textAlign: 'center' }}>
+        <CircularProgress size={60} />
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Finding your perfect match...
+        </Typography>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="sm" sx={{ mt: 4 }}>
+        <Paper
+          elevation={3}
+          sx={{
+            p: 4,
+            textAlign: 'center',
+            bgcolor: theme.palette.error.light,
+            color: theme.palette.error.contrastText,
+          }}
+        >
           <Typography variant="h5" gutterBottom>
-            No Favorites Selected
+            Oops!
           </Typography>
-          <Typography color="text.secondary" sx={{ mb: 3 }}>
-            Please select some dogs as favorites before finding a match.
+          <Typography variant="body1" paragraph>
+            {error}
           </Typography>
           <Button
             variant="contained"
-            startIcon={<Search />}
-            onClick={() => navigate('/search')}
+            onClick={() => navigate('/')}
+            sx={{ mt: 2 }}
           >
             Back to Search
           </Button>
         </Paper>
-      </Box>
+      </Container>
     );
   }
 
+  if (!matchedDog) return null;
+
   return (
-    <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
-      {!matchId && !matchMutation.isPending && (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h5" gutterBottom>
-            Find Your Perfect Match
-          </Typography>
-          <Typography color="text.secondary" sx={{ mb: 3 }}>
-            We'll help you find the perfect match from your {favoritesArray.length} favorite dogs.
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={() => matchMutation.mutate()}
-            disabled={matchMutation.isPending}
-          >
-            Generate Match
-          </Button>
-        </Paper>
+    <Container maxWidth="sm" sx={{ mt: 4 }}>
+      {showConfetti && (
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          recycle={false}
+          numberOfPieces={200}
+          gravity={0.2}
+        />
       )}
+      
+      <Box textAlign="center" mb={4}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          It's a Match! 🎉
+        </Typography>
+        <Typography variant="body1" color="text.secondary" paragraph>
+          Meet your new best friend
+        </Typography>
+      </Box>
 
-      {(matchMutation.isPending || isLoadingDog) && (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <CircularProgress sx={{ mb: 2 }} />
-          <Typography>Finding your perfect match...</Typography>
-        </Paper>
-      )}
+      <Box sx={{ transform: 'scale(1.05)' }}>
+        <DogCard
+          dog={matchedDog}
+          isFavorite={favorites.has(matchedDog.id)}
+          onToggleFavorite={toggleFavorite}
+          onClick={() => {}}
+        />
+      </Box>
 
-      {matchMutation.error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Failed to generate match. Please try again.
-        </Alert>
-      )}
-
-      {matchedDog && (
-        <>
-          <Typography variant="h4" align="center" gutterBottom>
-            It's a Match! 🎉
-          </Typography>
-          <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 3 }}>
-            Meet your perfect companion
-          </Typography>
-
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <DogCard
-              dog={matchedDog}
-              isFavorite={true}
-              onToggleFavorite={() => {}}
-            />
-          </Paper>
-
-          <Stack direction="row" spacing={2} justifyContent="center">
-            <Button
-              variant="outlined"
-              startIcon={<Refresh />}
-              onClick={handleTryAgain}
-              disabled={matchMutation.isPending}
-            >
-              Try Again
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleStartOver}
-            >
-              Start Over
-            </Button>
-          </Stack>
-        </>
-      )}
-    </Box>
+      <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center' }}>
+        <Button
+          variant="outlined"
+          onClick={() => navigate('/')}
+          sx={{ minWidth: 120 }}
+        >
+          Keep Searching
+        </Button>
+        <Button
+          variant="contained"
+          onClick={() => {
+            setShowConfetti(false);
+            navigate('/favorites');
+          }}
+          sx={{ minWidth: 120 }}
+        >
+          View Favorites
+        </Button>
+      </Box>
+    </Container>
   );
-} 
+}; 

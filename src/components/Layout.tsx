@@ -1,17 +1,8 @@
-import { Box, IconButton, useMediaQuery, useTheme as useMuiTheme } from '@mui/material';
-import { Brightness4, Brightness7 } from '@mui/icons-material';
-import { useTheme } from '../contexts/ThemeContext';
-import type { ReactNode } from 'react';
+import { Box } from '@mui/material';
+import { Outlet } from 'react-router-dom';
+import { Header } from './Header';
 
-interface LayoutProps {
-  children: ReactNode;
-}
-
-export function Layout({ children }: LayoutProps) {
-  const { mode, toggleTheme } = useTheme();
-  const theme = useMuiTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
+export function Layout() {
   return (
     <Box
       sx={{
@@ -19,26 +10,21 @@ export function Layout({ children }: LayoutProps) {
         bgcolor: 'background.default',
         color: 'text.primary',
         transition: 'background-color 0.3s ease',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <IconButton
-        onClick={toggleTheme}
-        color="inherit"
-        aria-label={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      <Header />
+      <Box
+        component="main"
         sx={{
-          position: 'fixed',
-          top: isMobile ? 16 : 24,
-          right: isMobile ? 16 : 24,
-          bgcolor: 'background.paper',
-          boxShadow: theme.shadows[2],
-          '&:hover': {
-            bgcolor: 'background.paper',
-          },
+          flex: 1,
+          width: '100%',
+          p: 3,
         }}
       >
-        {mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
-      </IconButton>
-      {children}
+        <Outlet />
+      </Box>
     </Box>
   );
 } 
