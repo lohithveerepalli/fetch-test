@@ -6,7 +6,6 @@ import {
   IconButton,
   Badge,
   Box,
-  useTheme,
   Tooltip,
 } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
@@ -20,7 +19,6 @@ import { useFavorites } from '../contexts/FavoritesContext';
 import { useThemeToggle } from '../contexts/ThemeContext';
 
 export const Header = () => {
-  const theme = useTheme();
   const { pathname } = useLocation();
   const { logout } = useAuth();
   const { favorites } = useFavorites();

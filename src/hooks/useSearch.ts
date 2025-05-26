@@ -38,7 +38,7 @@ export const useSearch = (filters: SearchFilters) => {
     []
   );
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { isLoading, error, refetch } = useQuery({
     queryKey: ['dogs', filters, searchState.currentPage],
     queryFn: async () => {
       try {

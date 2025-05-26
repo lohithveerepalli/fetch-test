@@ -12,9 +12,6 @@ import {
   TextField,
   Stack,
   Alert,
-  Pagination,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
 import { Clear, Pets } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';

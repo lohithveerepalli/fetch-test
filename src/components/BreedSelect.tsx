@@ -1,10 +1,9 @@
 import {
   Autocomplete,
   TextField,
-  CircularProgress,
-  Alert,
-  Box,
   Chip,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import { useBreeds } from '../hooks/useBreeds';
 

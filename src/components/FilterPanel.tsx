@@ -20,7 +20,6 @@ import { BreedSelect } from './BreedSelect';
 import type { Location } from '../api/types';
 
 interface FilterPanelProps {
-  breeds: string[];
   selectedBreeds: string[];
   onBreedsChange: (breeds: string[]) => void;
   zipCodes: string[];
@@ -28,12 +27,10 @@ interface FilterPanelProps {
   ageRange: { min?: number; max?: number };
   onAgeRangeChange: (range: { min?: number; max?: number }) => void;
   onClearFilters: () => void;
-  isLoading?: boolean;
   searchLocations: (query: string) => Promise<Location[]>;
 }
 
 export const FilterPanel = ({
-  breeds,
   selectedBreeds,
   onBreedsChange,
   zipCodes,
@@ -41,7 +38,6 @@ export const FilterPanel = ({
   ageRange,
   onAgeRangeChange,
   onClearFilters,
-  isLoading,
   searchLocations,
 }: FilterPanelProps) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -92,7 +88,6 @@ export const FilterPanel = ({
           Breeds
         </Typography>
         <BreedSelect
-          breeds={breeds}
           selectedBreeds={selectedBreeds}
           onChange={onBreedsChange}
         />

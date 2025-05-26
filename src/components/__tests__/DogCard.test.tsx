@@ -18,6 +18,7 @@ describe('DogCard', () => {
         dog={mockDog}
         isFavorite={false}
         onToggleFavorite={() => {}}
+        onClick={() => {}}
       />
     );
 
@@ -35,6 +36,7 @@ describe('DogCard', () => {
         dog={youngDog}
         isFavorite={false}
         onToggleFavorite={() => {}}
+        onClick={() => {}}
       />
     );
 
@@ -47,6 +49,7 @@ describe('DogCard', () => {
         dog={mockDog}
         isFavorite={false}
         onToggleFavorite={() => {}}
+        onClick={() => {}}
       />
     );
 
@@ -57,6 +60,7 @@ describe('DogCard', () => {
         dog={mockDog}
         isFavorite={true}
         onToggleFavorite={() => {}}
+        onClick={() => {}}
       />
     );
 
@@ -70,6 +74,7 @@ describe('DogCard', () => {
         dog={mockDog}
         isFavorite={false}
         onToggleFavorite={handleToggle}
+        onClick={() => {}}
       />
     );
 
