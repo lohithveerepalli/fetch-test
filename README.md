@@ -13,20 +13,6 @@ A modern web application for browsing and adopting dogs, built for Fetch's front
 - **Styling**: Emotion (MUI's styling solution)
 - **CI/CD**: GitHub Actions + Vercel
 
-## 🏗️ Architecture
-
-```mermaid
-graph TD
-    A[App Entry] --> B[Auth Context]
-    B --> C[Protected Routes]
-    C --> D[Search Page]
-    C --> E[Match Page]
-    D --> F[Search Context]
-    D --> G[Dog Card Grid]
-    G --> H[Favorites Context]
-    E --> H
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-```
 
 ## 🛠️ Setup & Development
 
