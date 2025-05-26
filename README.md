@@ -2,7 +2,7 @@
 
 A modern web application for browsing and adopting dogs, built for Fetch's frontend take-home assessment.
 
-## 🚀 Tech Stack
+## Tech Stack
 
 - **Frontend Framework**: React 18 with TypeScript
 - **Build Tool**: Vite
@@ -13,8 +13,9 @@ A modern web application for browsing and adopting dogs, built for Fetch's front
 - **Styling**: Emotion (MUI's styling solution)
 - **CI/CD**: GitHub Actions + Vercel
 
-
-## 🛠️ Setup & Development
+## Submission
+- fetchassesment.netlify.app
+- https://github.com/lohithveerepalli/fetch-test
 
 ### Prerequisites
 - Node.js 20.x or higher
